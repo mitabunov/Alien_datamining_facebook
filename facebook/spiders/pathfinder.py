@@ -47,14 +47,18 @@ class PathfinderSpider(scrapy.Spider):
                               callback=self.parse_profile)
 
     def parse_profile(self, response: HtmlResponse):
-        # self.chrome.get(response.url)
-        if re.search(r'profile.php', response.url):
-            current_user_id = response.url.split('=')[-1]
-            self.chrome.get(f"https://m.facebook.com/profile.php?v=friends&id={current_user_id}")
-        else:
-            current_user_id = response.xpath('//meta[@property = "al:android:url"]/@content').extract_first().split('/')[-1]
-            current_user_nickname = response.url.split('/')[-1]
-            self.chrome.get(f"https://m.facebook.com/{current_user_nickname}/friends")
+        self.chrome.get(response.url)
+        current_user_id = \
+        self.chrome.find_element_by_xpath('//meta[@property = "al:android:url"]').get_attribute('content').split('/')[
+            -1]
+        self.chrome.get(f"https://m.facebook.com/profile.php?v=friends&id={current_user_id}")
+        # if re.search(r'profile.php', response.url):
+        #     current_user_id = response.url.split('=')[-1]
+        #     self.chrome.get(f"https://m.facebook.com/profile.php?v=friends&id={current_user_id}")
+        # else:
+        #     current_user_id = response.xpath('//meta[@property = "al:android:url"]/@content').extract_first().split('/')[-1]
+        #     current_user_nickname = response.url.split('/')[-1]
+        #     self.chrome.get(f"https://m.facebook.com/{current_user_nickname}/friends")
         time.sleep(3)
         print('Scrolling to bottom...')
         # Scroll to bottom
@@ -66,7 +70,7 @@ class PathfinderSpider(scrapy.Spider):
                  self.chrome.find_elements_by_xpath('//a[@class = "touchable right _58x3"]')))
         yield FacebookItem(user_id=int(current_user_id), friends=friends)
         for friend in friends:
-            yield response.follow(f'{friend}',
+            yield response.follow(f'https://www.facebook.com/{friend}',
                                   callback=self.parse_profile)
 
 
